@@ -1,15 +1,17 @@
 import * as React from 'react';
-import { Text, View, StyleSheet, Image } from 'react-native';
-import Colors from "./Themes/colors"
+import { Text, View, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import Colors from "./Themes/colors";
 
-export default function Song({ id, songName, duration, artistName, albumName, imageUrl }) {
+export default function Song({ id, songName, duration, artistName, albumName, imageUrl, previewUrl, externalUrl, navigation}) {
 
   return (
-    <View style={styles.items}>
-        <View style={styles.a}>
-            <Text style={{color: 'white'}}> {id} </Text>
 
-        </View>
+    <TouchableOpacity style={styles.items} onPress={() => navigation.navigate('SongDetails', {details: externalUrl})}>
+        <TouchableOpacity style={styles.a} onPress={() => navigation.navigate('SongPlay', {play: previewUrl})}>
+            <Image style={{height: 30, width: 30}} source={require('./assets/play-button.png')} />
+        </TouchableOpacity>
         <View style={styles.b}>
             <Image source={{uri: imageUrl}} style={{height: 64, width: 64}}/>
 
@@ -27,9 +29,7 @@ export default function Song({ id, songName, duration, artistName, albumName, im
             <Text style={{color: 'white'}}> {duration} </Text>
 
         </View>
-
-
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   a: {
-      flex: .05,
+      flex: .15,
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: Colors.background,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
       width: '100%',
   },
   c: {
-      flex: .35,
+      flex: .25,
       justifyContent: 'center',
       backgroundColor: Colors.background,
       height: '100%',

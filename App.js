@@ -1,4 +1,7 @@
-import { StyleSheet, View, Text, Image, SafeAreaView, TouchableOpacity, FlatList} from "react-native";
+import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { StyleSheet, View, Text, Image, TouchableOpacity, FlatList} from "react-native";
 import { useState, useEffect } from "react";
 import { ResponseType, useAuthRequest } from "expo-auth-session";
 import { myTopTracks, albumTracks } from "./utils/apiOptions";
@@ -6,6 +9,7 @@ import { REDIRECT_URI, SCOPES, CLIENT_ID, ALBUM_ID } from "./utils/constants";
 import Colors from "./Themes/colors"
 import convertToSeconds from "./utils/millisToMinuteSeconds.js";
 import Song from "./Song.js";
+import { WebView } from 'react-native-webview';
 
 // Endpoints for authorizing with Spotify
 const discovery = {
@@ -13,7 +17,21 @@ const discovery = {
   tokenEndpoint: "https://accounts.spotify.com/api/token"
 };
 
-export default function App() {
+const Stack = createStackNavigator();
+
+function SongDetails({ navigation, route }) {
+  return (
+      <WebView source={{ uri: route.params.details }} />
+  );
+}
+
+function SongPlay({ navigation, route }) {
+    return (
+        <WebView source={{ uri: route.params.play }} />
+    );
+}
+
+function Screen1({navigation}) {
   const [token, setToken] = useState("");
   const [tracks, setTracks] = useState([]);
   const [request, response, promptAsync] = useAuthRequest(
@@ -38,11 +56,7 @@ export default function App() {
 
   useEffect(() => {
     const fetchTracks = async () => {
-      // TODO: Comment out which one you don't want to use
-      // myTopTracks or albumTracks
-
       const res = await myTopTracks(token);
-      // const res = await albumTracks(ALBUM_ID, token);
       setTracks(res);
     };
 
@@ -63,12 +77,16 @@ export default function App() {
       artistName={item.artistName}
       albumName={item.albumName}
       imageUrl={item.imageUrl}
+      previewUrl={item.previewUrl}
+      externalUrl={item.externalUrl}
+      navigation={navigation}
     />
   );
 
   let contentDisplayed = null;
 
   if (token) {
+      // console.log('inside token', tracks[0].external_urls.spotify);
       let songs = [];
       for (let i = 0; i < tracks.length; i++) {
           let songObj = {};
@@ -78,6 +96,8 @@ export default function App() {
           songObj['artistName'] = tracks[i].artists[0].name;
           songObj['albumName'] = tracks[i].album.name;
           songObj['imageUrl'] = tracks[i].album.images.slice(-1)[0].url;
+          songObj['previewUrl'] = tracks[i].preview_url;
+          songObj['externalUrl'] = tracks[i].external_urls.spotify;
 
           songs.push(songObj);
       }
@@ -122,6 +142,20 @@ export default function App() {
   }
 
   return contentDisplayed;
+}
+
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerStyle: {backgroundColor: Colors.background}, headerTitleStyle: {color: 'white'} }}>
+        <Stack.Screen name="Screen1" component={Screen1} options={{headerShown: false}} />
+
+        <Stack.Screen name="SongDetails" component={SongDetails} options={{title: "Song Details"}} />
+        <Stack.Screen name="SongPlay" component={SongPlay} options={{title: "Song Preview"}} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
 const styles = StyleSheet.create({
